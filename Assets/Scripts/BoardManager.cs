@@ -1,5 +1,13 @@
 using UnityEngine;
 
+enum Directions
+{
+    Up = 0,
+    Down = 1,
+    Left = 2,
+    Right = 3,
+}
+
 public class BoardManager : MonoBehaviour
 {
     [Header("Board Settings")]
@@ -71,51 +79,71 @@ public class BoardManager : MonoBehaviour
     //Avoids free matches in the spawn phase.
     private void SpawnCheckGuard(Piece currentPiece)
     {
-        Vector2Int currentPiecePos = (Vector2Int)currentPiece.CurrentTile.TilePosition;
 
+        Piece neighbourLeftPiece = CheckNeighbourPiece(currentPiece, Directions.Left);
 
-        //checks the left position
-        Vector2Int checkNeighbourAtTheLeft = new Vector2Int(currentPiecePos.x - 1, currentPiecePos.y);
+        Piece neighbourBottomPiece = CheckNeighbourPiece(currentPiece, Directions.Down);
 
-        //checks the bottom position
-        Vector2Int checkNeighbourAtTheBottom = new Vector2Int(currentPiecePos.x, currentPiecePos.y - 1);
-
-        //Here it's import to check if we reached(or we are) the bouds, if so.. we don't do anything
-        if(checkNeighbourAtTheLeft.x >= 0)
+        if(CheckPiecesMatch(currentPiece, neighbourLeftPiece))
         {
-            Piece neighbourLeftPiece = _tiles[checkNeighbourAtTheLeft.x, checkNeighbourAtTheLeft.y].PieceReference;
-            //This part of the code need some refactoring, too confusing right now
-            if(DoesThisTwoPiecesMatch(currentPiece, neighbourLeftPiece))
+            if(CheckPiecesMatch(neighbourLeftPiece, CheckNeighbourPiece(neighbourLeftPiece, Directions.Left)))
             {
-                if (neighbourLeftPiece.CurrentTile.TilePosition.x > 0)
-                {
-                   Piece neighbourOfTheLeftPiece = _tiles[neighbourLeftPiece.CurrentTile.TilePosition.x - 1, neighbourLeftPiece.CurrentTile.TilePosition.y].PieceReference;
-
-                   if (DoesThisTwoPiecesMatch(neighbourLeftPiece, neighbourOfTheLeftPiece))
-                   {
-                        neighbourOfTheLeftPiece.SetPiece();
-                   }
-                }
+                Piece neigbourLeftLeft = CheckNeighbourPiece(neighbourLeftPiece, Directions.Left);
+                neigbourLeftLeft.SetPiece();
             }
         }
 
-        if(checkNeighbourAtTheBottom.y >= 0)
+        if(CheckPiecesMatch(currentPiece, neighbourBottomPiece))
         {
-           Piece neighbourBottomPiece = _tiles[checkNeighbourAtTheBottom.x, checkNeighbourAtTheBottom.y].PieceReference;
-
-            if (DoesThisTwoPiecesMatch(currentPiece, neighbourBottomPiece))
+            if (CheckPiecesMatch(neighbourBottomPiece, CheckNeighbourPiece(neighbourBottomPiece, Directions.Down)))
             {
-                if (neighbourBottomPiece.CurrentTile.TilePosition.y > 0)
-                {
-                    Piece neighbourOfTheBottomPiece = _tiles[neighbourBottomPiece.CurrentTile.TilePosition.x, neighbourBottomPiece.CurrentTile.TilePosition.y - 1].PieceReference;
-
-                    if (DoesThisTwoPiecesMatch(neighbourBottomPiece, neighbourOfTheBottomPiece))
-                    {
-                        neighbourOfTheBottomPiece.SetPiece();
-                    }
-                }
+                Piece neighbourBottomBottom = CheckNeighbourPiece(neighbourBottomPiece, Directions.Down);
+                neighbourBottomBottom.SetPiece();
             }
         }
+
+        ////checks the left position
+        //Vector2Int checkNeighbourAtTheLeft = new Vector2Int(currentPiecePos.x - 1, currentPiecePos.y);
+
+        ////checks the bottom position
+        //Vector2Int checkNeighbourAtTheBottom = new Vector2Int(currentPiecePos.x, currentPiecePos.y - 1);
+
+        ////Here it's import to check if we reached(or we are) the bouds, if so.. we don't do anything
+        //if(checkNeighbourAtTheLeft.x >= 0)
+        //{
+        //    Piece neighbourLeftPiece = _tiles[checkNeighbourAtTheLeft.x, checkNeighbourAtTheLeft.y].PieceReference;
+        //    //This part of the code need some refactoring, too confusing right now
+        //    if(CheckPiecesMatch(currentPiece, neighbourLeftPiece))
+        //    {
+        //        if (neighbourLeftPiece.CurrentTile.TilePosition.x > 0)
+        //        {
+        //           Piece neighbourOfTheLeftPiece = _tiles[neighbourLeftPiece.CurrentTile.TilePosition.x - 1, neighbourLeftPiece.CurrentTile.TilePosition.y].PieceReference;
+
+        //           if (CheckPiecesMatch(neighbourLeftPiece, neighbourOfTheLeftPiece))
+        //           {
+        //                neighbourOfTheLeftPiece.SetPiece();
+        //           }
+        //        }
+        //    }
+        //}
+
+        //if(checkNeighbourAtTheBottom.y >= 0)
+        //{
+        //   Piece neighbourBottomPiece = _tiles[checkNeighbourAtTheBottom.x, checkNeighbourAtTheBottom.y].PieceReference;
+
+        //    if (CheckPiecesMatch(currentPiece, neighbourBottomPiece))
+        //    {
+        //        if (neighbourBottomPiece.CurrentTile.TilePosition.y > 0)
+        //        {
+        //            Piece neighbourOfTheBottomPiece = _tiles[neighbourBottomPiece.CurrentTile.TilePosition.x, neighbourBottomPiece.CurrentTile.TilePosition.y - 1].PieceReference;
+
+        //            if (CheckPiecesMatch(neighbourBottomPiece, neighbourOfTheBottomPiece))
+        //            {
+        //                neighbourOfTheBottomPiece.SetPiece();
+        //            }
+        //        }
+        //    }
+        //}
 
     }
 
@@ -125,8 +153,10 @@ public class BoardManager : MonoBehaviour
     /// <param name="piece1"></param>
     /// <param name="piece2"></param>
     /// <returns></returns>
-    private bool DoesThisTwoPiecesMatch(Piece piece1, Piece piece2)
+    private bool CheckPiecesMatch(Piece piece1, Piece piece2)
     {
+        if(piece1 == null || piece2 == null) { return false; }
+
         if(piece1.PieceType == piece2.PieceType && piece1.PieceSprite == piece2.PieceSprite) 
         {
             return true;
@@ -136,4 +166,60 @@ public class BoardManager : MonoBehaviour
             return false;
         }
     }
+
+    /// <summary>
+    /// This method checks for the neighbor piece, if it exits, returns it, it's also necessary to pass the direction you want to check
+    /// </summary>
+    /// <param name="pieceToCheck"></param>
+    /// <param name="directionToCheck"></param>
+    /// <returns></returns>
+    private Piece CheckNeighbourPiece(Piece pieceToCheck, Directions directionToCheck)
+    {
+
+        Vector2Int currentPiecePos = (Vector2Int)pieceToCheck.CurrentTile.TilePosition;
+
+        Vector2Int directionOffset = Vector2Int.zero;
+
+        switch (directionToCheck)
+        {
+            case Directions.Up:
+                directionOffset = Vector2Int.up;
+                break;
+            case Directions.Down:
+                directionOffset = Vector2Int.down;
+                break;
+            case Directions.Left:
+                directionOffset = Vector2Int.left;
+                break;
+            case Directions.Right:
+                directionOffset = Vector2Int.right;
+                break;
+        }
+
+        Vector2Int neighborPiecePos = currentPiecePos + directionOffset;
+
+        if(CheckIfTileExists(neighborPiecePos))
+        {
+            return _tiles[neighborPiecePos.x, neighborPiecePos.y].PieceReference;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Checks to see if the Piece position is in bouds, otherwise it returns null
+    /// </summary>
+    /// <param name="piece"></param>
+    /// <returns></returns>
+    private bool CheckIfTileExists(Vector2 tilePos)
+    {
+        if (tilePos.x < 0 || tilePos.y < 0) { return false; }
+
+        if (tilePos.x >= boardWidth || tilePos.y >= boardHeight) { return false; }
+
+        return true;
+    }
+
 }
