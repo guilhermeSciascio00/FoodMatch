@@ -102,49 +102,6 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        ////checks the left position
-        //Vector2Int checkNeighbourAtTheLeft = new Vector2Int(currentPiecePos.x - 1, currentPiecePos.y);
-
-        ////checks the bottom position
-        //Vector2Int checkNeighbourAtTheBottom = new Vector2Int(currentPiecePos.x, currentPiecePos.y - 1);
-
-        ////Here it's import to check if we reached(or we are) the bouds, if so.. we don't do anything
-        //if(checkNeighbourAtTheLeft.x >= 0)
-        //{
-        //    Piece neighbourLeftPiece = _tiles[checkNeighbourAtTheLeft.x, checkNeighbourAtTheLeft.y].PieceReference;
-        //    //This part of the code need some refactoring, too confusing right now
-        //    if(CheckPiecesMatch(currentPiece, neighbourLeftPiece))
-        //    {
-        //        if (neighbourLeftPiece.CurrentTile.TilePosition.x > 0)
-        //        {
-        //           Piece neighbourOfTheLeftPiece = _tiles[neighbourLeftPiece.CurrentTile.TilePosition.x - 1, neighbourLeftPiece.CurrentTile.TilePosition.y].PieceReference;
-
-        //           if (CheckPiecesMatch(neighbourLeftPiece, neighbourOfTheLeftPiece))
-        //           {
-        //                neighbourOfTheLeftPiece.SetPiece();
-        //           }
-        //        }
-        //    }
-        //}
-
-        //if(checkNeighbourAtTheBottom.y >= 0)
-        //{
-        //   Piece neighbourBottomPiece = _tiles[checkNeighbourAtTheBottom.x, checkNeighbourAtTheBottom.y].PieceReference;
-
-        //    if (CheckPiecesMatch(currentPiece, neighbourBottomPiece))
-        //    {
-        //        if (neighbourBottomPiece.CurrentTile.TilePosition.y > 0)
-        //        {
-        //            Piece neighbourOfTheBottomPiece = _tiles[neighbourBottomPiece.CurrentTile.TilePosition.x, neighbourBottomPiece.CurrentTile.TilePosition.y - 1].PieceReference;
-
-        //            if (CheckPiecesMatch(neighbourBottomPiece, neighbourOfTheBottomPiece))
-        //            {
-        //                neighbourOfTheBottomPiece.SetPiece();
-        //            }
-        //        }
-        //    }
-        //}
-
     }
 
     /// <summary>
