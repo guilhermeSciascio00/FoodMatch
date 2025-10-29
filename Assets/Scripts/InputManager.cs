@@ -31,6 +31,11 @@ public class InputManager : MonoBehaviour
         return _touchInteraction.IsPressed();
     }
 
+    public bool WasTouchReleased()
+    {
+        return _touchInteraction.WasReleasedThisFrame();
+    }
+
     public Vector2 GetTouchPosition()
     {
         return _touchPos.ReadValue<Vector2>();

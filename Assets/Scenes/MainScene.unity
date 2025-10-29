@@ -434,8 +434,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerBoardInteraction
   _currentHoldingPiece: {fileID: 0}
   _targetSwapPiece: {fileID: 0}
+  _pieceLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
   _inputManager: {fileID: 1858576849}
   _mainCamera: {fileID: 519420031}
+  _boardManager: {fileID: 98414087}
 --- !u!1 &1858576848
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-enum Directions
+public enum Directions
 {
     Up = 0,
     Down = 1,
@@ -130,7 +130,7 @@ public class BoardManager : MonoBehaviour
     /// <param name="pieceToCheck"></param>
     /// <param name="directionToCheck"></param>
     /// <returns></returns>
-    private Piece CheckNeighbourPiece(Piece pieceToCheck, Directions directionToCheck)
+    public Piece CheckNeighbourPiece(Piece pieceToCheck, Directions directionToCheck)
     {
 
         Vector2Int currentPiecePos = (Vector2Int)pieceToCheck.CurrentTile.TilePosition;
@@ -178,5 +178,6 @@ public class BoardManager : MonoBehaviour
 
         return true;
     }
+
 
 }
