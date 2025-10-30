@@ -165,6 +165,38 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public void SwapPieces(Piece currentPiece, Piece targetPiece)
+    {
+        if (currentPiece == null || targetPiece == null) return;
+
+        Vector2Int currentPiecePos = (Vector2Int)currentPiece.CurrentTile.TilePosition;
+
+        Vector2Int targetPiecePos = (Vector2Int)targetPiece.CurrentTile.TilePosition;
+
+        //Target Piece Var
+        Piece tempPiece = _tiles[targetPiecePos.x, targetPiecePos.y].PieceReference;
+
+        Tile tempTile = targetPiece.CurrentTile;
+        Transform tempParent = targetPiece.transform.parent;
+
+        //Changing the target piece Logically
+        _tiles[targetPiecePos.x, targetPiecePos.y].PieceReference = _tiles[currentPiecePos.x, currentPiecePos.y].PieceReference;
+
+        //Changing the target tile logically
+        targetPiece.CurrentTile = currentPiece.CurrentTile;
+
+        targetPiece.transform.parent = currentPiece.transform.parent;
+        targetPiece.transform.localPosition = Vector3.zero;
+
+        //Changing the current piece logically
+        _tiles[currentPiecePos.x, currentPiecePos.y].PieceReference = tempPiece;
+
+        //changing the current piece tile
+        currentPiece.CurrentTile = tempTile;
+        currentPiece.transform.parent = tempParent;
+        currentPiece.transform.localPosition = Vector3.zero;
+    }
+
     /// <summary>
     /// Checks to see if the Piece position is in bouds, otherwise it returns null
     /// </summary>

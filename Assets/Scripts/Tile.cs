@@ -1,3 +1,4 @@
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 public enum TileState
@@ -16,13 +17,27 @@ public class Tile : MonoBehaviour
 
     TileState _tileState = TileState.Empty;
     public TileState TileState {  get { return _tileState; } set {  _tileState = value; } }
-    
+
+    [Header("Debug only")]
+    [SerializeField] bool printCurrentPiece;
+
+
+
     private void Start()
     {
         string tileCoords = $"x: {TilePosition.x}, y: {TilePosition.y}";
         gameObject.name = tileCoords;
 
         //Debug.Log($"{tileCoords} holds the piece: {PieceReference.gameObject.name} and its status is : {TileState}");
+    }
+
+    private void Update()
+    {
+        if (printCurrentPiece)
+        {
+            Debug.Log(PieceReference);
+            printCurrentPiece = false;
+        }
     }
 
 }

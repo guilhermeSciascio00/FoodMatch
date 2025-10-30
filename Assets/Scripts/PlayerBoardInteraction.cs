@@ -102,7 +102,16 @@ public class PlayerBoardInteraction : MonoBehaviour
 
         }
 
+        if(_currentHoldingPiece != null && _targetSwapPiece != null) 
+        {
+            _boardManager.SwapPieces(_currentHoldingPiece, _targetSwapPiece);
+            _currentHoldingPiece = null;
+            _targetSwapPiece = null;
+        }
+
     }
+
+
 
     private void ConvertTouchPosition(Vector2 touchPos)
     {
