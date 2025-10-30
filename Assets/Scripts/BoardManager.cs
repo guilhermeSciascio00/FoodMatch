@@ -1,6 +1,6 @@
 using UnityEngine;
 
-enum Directions
+public enum Directions
 {
     Up = 0,
     Down = 1,
@@ -102,49 +102,6 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        ////checks the left position
-        //Vector2Int checkNeighbourAtTheLeft = new Vector2Int(currentPiecePos.x - 1, currentPiecePos.y);
-
-        ////checks the bottom position
-        //Vector2Int checkNeighbourAtTheBottom = new Vector2Int(currentPiecePos.x, currentPiecePos.y - 1);
-
-        ////Here it's import to check if we reached(or we are) the bouds, if so.. we don't do anything
-        //if(checkNeighbourAtTheLeft.x >= 0)
-        //{
-        //    Piece neighbourLeftPiece = _tiles[checkNeighbourAtTheLeft.x, checkNeighbourAtTheLeft.y].PieceReference;
-        //    //This part of the code need some refactoring, too confusing right now
-        //    if(CheckPiecesMatch(currentPiece, neighbourLeftPiece))
-        //    {
-        //        if (neighbourLeftPiece.CurrentTile.TilePosition.x > 0)
-        //        {
-        //           Piece neighbourOfTheLeftPiece = _tiles[neighbourLeftPiece.CurrentTile.TilePosition.x - 1, neighbourLeftPiece.CurrentTile.TilePosition.y].PieceReference;
-
-        //           if (CheckPiecesMatch(neighbourLeftPiece, neighbourOfTheLeftPiece))
-        //           {
-        //                neighbourOfTheLeftPiece.SetPiece();
-        //           }
-        //        }
-        //    }
-        //}
-
-        //if(checkNeighbourAtTheBottom.y >= 0)
-        //{
-        //   Piece neighbourBottomPiece = _tiles[checkNeighbourAtTheBottom.x, checkNeighbourAtTheBottom.y].PieceReference;
-
-        //    if (CheckPiecesMatch(currentPiece, neighbourBottomPiece))
-        //    {
-        //        if (neighbourBottomPiece.CurrentTile.TilePosition.y > 0)
-        //        {
-        //            Piece neighbourOfTheBottomPiece = _tiles[neighbourBottomPiece.CurrentTile.TilePosition.x, neighbourBottomPiece.CurrentTile.TilePosition.y - 1].PieceReference;
-
-        //            if (CheckPiecesMatch(neighbourBottomPiece, neighbourOfTheBottomPiece))
-        //            {
-        //                neighbourOfTheBottomPiece.SetPiece();
-        //            }
-        //        }
-        //    }
-        //}
-
     }
 
     /// <summary>
@@ -173,7 +130,7 @@ public class BoardManager : MonoBehaviour
     /// <param name="pieceToCheck"></param>
     /// <param name="directionToCheck"></param>
     /// <returns></returns>
-    private Piece CheckNeighbourPiece(Piece pieceToCheck, Directions directionToCheck)
+    public Piece CheckNeighbourPiece(Piece pieceToCheck, Directions directionToCheck)
     {
 
         Vector2Int currentPiecePos = (Vector2Int)pieceToCheck.CurrentTile.TilePosition;
@@ -208,6 +165,38 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public void SwapPieces(Piece currentPiece, Piece targetPiece)
+    {
+        if (currentPiece == null || targetPiece == null) return;
+
+        Vector2Int currentPiecePos = (Vector2Int)currentPiece.CurrentTile.TilePosition;
+
+        Vector2Int targetPiecePos = (Vector2Int)targetPiece.CurrentTile.TilePosition;
+
+        //Target Piece Var
+        Piece tempPiece = _tiles[targetPiecePos.x, targetPiecePos.y].PieceReference;
+
+        Tile tempTile = targetPiece.CurrentTile;
+        Transform tempParent = targetPiece.transform.parent;
+
+        //Changing the target piece Logically
+        _tiles[targetPiecePos.x, targetPiecePos.y].PieceReference = _tiles[currentPiecePos.x, currentPiecePos.y].PieceReference;
+
+        //Changing the target tile logically
+        targetPiece.CurrentTile = currentPiece.CurrentTile;
+
+        targetPiece.transform.parent = currentPiece.transform.parent;
+        targetPiece.transform.localPosition = Vector3.zero;
+
+        //Changing the current piece logically
+        _tiles[currentPiecePos.x, currentPiecePos.y].PieceReference = tempPiece;
+
+        //changing the current piece tile
+        currentPiece.CurrentTile = tempTile;
+        currentPiece.transform.parent = tempParent;
+        currentPiece.transform.localPosition = Vector3.zero;
+    }
+
     /// <summary>
     /// Checks to see if the Piece position is in bouds, otherwise it returns null
     /// </summary>
@@ -221,5 +210,6 @@ public class BoardManager : MonoBehaviour
 
         return true;
     }
+
 
 }

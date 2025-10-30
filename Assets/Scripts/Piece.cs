@@ -15,6 +15,9 @@ public class Piece : MonoBehaviour
     [SerializeField] Sprite pieceSprite;
     public Sprite PieceSprite { get { return pieceSprite; } }
 
+    [Header("Debug")]
+    [SerializeField] bool printCurrentTile;
+
     PieceType pType = PieceType.None;
     public PieceType PieceType { get { return pType; } }
     public Tile CurrentTile { get; set; }
@@ -23,6 +26,15 @@ public class Piece : MonoBehaviour
     [SerializeField] SpriteRenderer _spriteRenderer;
     [SerializeField] List<PieceDataSO> _pieceCollectionSO;
 
+
+    private void Update()
+    {
+        if (printCurrentTile)
+        {
+            Debug.Log(CurrentTile);
+            printCurrentTile = false;
+        }
+    }
 
     //I think that's important to let it be public, before we need to verify in the BoardManager, if we didn't spawn three similar pieces in the neighbors tiles.. If we did, we need to set the piece again.
     public void SetPiece()
