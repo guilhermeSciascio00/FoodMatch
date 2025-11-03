@@ -53,6 +53,7 @@ public class PlayerBoardInteraction : MonoBehaviour
             _isDragging = false;
 
             Vector2 dragDifference = _endDragginPos - _startingDraggingPos;
+
             float dragDistance = Vector2.Distance(_startingDraggingPos, _endDragginPos);
 
             if (dragDistance > _swapTreshold)
@@ -104,7 +105,7 @@ public class PlayerBoardInteraction : MonoBehaviour
 
         if(_currentHoldingPiece != null && _targetSwapPiece != null) 
         {
-            _boardManager.SwapPieces(_currentHoldingPiece, _targetSwapPiece);
+            _boardManager.SwapPieces(_currentHoldingPiece, _targetSwapPiece, isReversing:false);
             _currentHoldingPiece = null;
             _targetSwapPiece = null;
         }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum Directions
@@ -84,18 +85,18 @@ public class BoardManager : MonoBehaviour
 
         Piece neighbourBottomPiece = CheckNeighbourPiece(currentPiece, Directions.Down);
 
-        if(CheckPiecesMatch(currentPiece, neighbourLeftPiece))
+        if(CheckPieceMatch(currentPiece, neighbourLeftPiece))
         {
-            if(CheckPiecesMatch(neighbourLeftPiece, CheckNeighbourPiece(neighbourLeftPiece, Directions.Left)))
+            if(CheckPieceMatch(neighbourLeftPiece, CheckNeighbourPiece(neighbourLeftPiece, Directions.Left)))
             {
                 Piece neigbourLeftLeft = CheckNeighbourPiece(neighbourLeftPiece, Directions.Left);
                 neigbourLeftLeft.SetPiece();
             }
         }
 
-        if(CheckPiecesMatch(currentPiece, neighbourBottomPiece))
+        if(CheckPieceMatch(currentPiece, neighbourBottomPiece))
         {
-            if (CheckPiecesMatch(neighbourBottomPiece, CheckNeighbourPiece(neighbourBottomPiece, Directions.Down)))
+            if (CheckPieceMatch(neighbourBottomPiece, CheckNeighbourPiece(neighbourBottomPiece, Directions.Down)))
             {
                 Piece neighbourBottomBottom = CheckNeighbourPiece(neighbourBottomPiece, Directions.Down);
                 neighbourBottomBottom.SetPiece();
@@ -110,7 +111,7 @@ public class BoardManager : MonoBehaviour
     /// <param name="piece1"></param>
     /// <param name="piece2"></param>
     /// <returns></returns>
-    private bool CheckPiecesMatch(Piece piece1, Piece piece2)
+    private bool CheckPieceMatch(Piece piece1, Piece piece2)
     {
         if(piece1 == null || piece2 == null) { return false; }
 
@@ -165,9 +166,11 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public void SwapPieces(Piece currentPiece, Piece targetPiece)
+    public void SwapPieces(Piece currentPiece, Piece targetPiece, bool isReversing)
     {
         if (currentPiece == null || targetPiece == null) return;
+
+        List<Piece> swapMatches = new List<Piece>();
 
         Vector2Int currentPiecePos = (Vector2Int)currentPiece.CurrentTile.TilePosition;
 
@@ -195,6 +198,61 @@ public class BoardManager : MonoBehaviour
         currentPiece.CurrentTile = tempTile;
         currentPiece.transform.parent = tempParent;
         currentPiece.transform.localPosition = Vector3.zero;
+
+
+        swapMatches.Add(currentPiece);
+
+        swapMatches = CheckNeighboursInLine(currentPiece, Directions.Left, Directions.Right);
+
+        //Only do this once, when the player swap the pieces
+        if (!isReversing)
+        {
+            foreach (Piece match in CheckNeighboursInLine(currentPiece, Directions.Up, Directions.Down))
+            {
+                swapMatches.Add(match);
+            }
+
+
+            if (swapMatches.Count > 1)
+            {
+                //TODO Destroy the pieces in the match(center included)
+                Debug.Log("We have a match");
+            }
+            else
+            {
+                //TODO get back to your place sneaky piece
+                Debug.Log("We don't have a match");
+                SwapPieces(targetPiece, currentPiece, isReversing: true);
+            }
+        }
+        
+    }
+
+    private List<Piece> CheckNeighboursInLine(Piece centerPiece, Directions directionA, Directions directionB)
+    {
+        List<Piece> matches = new List<Piece>();
+        //The swaped pieces before the match verification run, we will use it to reset the value of the center piece for each direction
+        Piece firstCenterPiece = centerPiece;
+
+        while (CheckPieceMatch(centerPiece, CheckNeighbourPiece(centerPiece, directionA)))
+        {
+            centerPiece = CheckNeighbourPiece(centerPiece, directionA);
+            matches.Add(centerPiece);
+        }
+
+        centerPiece = firstCenterPiece;
+        
+        while(CheckPieceMatch(centerPiece, CheckNeighbourPiece(centerPiece, directionB)))
+        {
+            centerPiece = CheckNeighbourPiece(centerPiece, directionB);
+            matches.Add(centerPiece);
+        }
+
+        foreach (Piece match in matches)
+        {
+            Debug.Log(match.CurrentTile);
+        }
+        return matches;
     }
 
     /// <summary>
