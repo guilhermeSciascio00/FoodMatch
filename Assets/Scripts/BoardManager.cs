@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public enum Directions
 {
@@ -18,10 +19,14 @@ public class BoardManager : MonoBehaviour
     [SerializeField] Piece basePiece;
 
     private Tile[,] _tiles;
+    private bool _isSwapping = false;
+    private float _swapDuration = 0.2f;
+    private float _shrinkDuration = 0.2f;
 
     private void Start()
     {
         _tiles = new Tile[boardHeight, boardWidth];
+        DOTween.Init();
         CreateGameBoard();
         CreateAllPieces();
     }
@@ -168,19 +173,23 @@ public class BoardManager : MonoBehaviour
 
     public void SwapPieces(Piece currentPiece, Piece targetPiece, bool isReversing)
     {
-        if (currentPiece == null || targetPiece == null) return;
+        SwapPiecesLogically(currentPiece, targetPiece);
+        SwapPiecesVisually(currentPiece, targetPiece, isReversing);
+    }
 
-        List<Piece> swapMatches = new List<Piece>();
+    private void SwapPiecesLogically(Piece currentPiece, Piece targetPiece)
+    {
+        if (currentPiece == null || targetPiece == null) return;
 
         Vector2Int currentPiecePos = (Vector2Int)currentPiece.CurrentTile.TilePosition;
 
         Vector2Int targetPiecePos = (Vector2Int)targetPiece.CurrentTile.TilePosition;
 
-        //Target Piece Var
+        //Target Piece temp
         Piece tempPiece = _tiles[targetPiecePos.x, targetPiecePos.y].PieceReference;
 
+        //Target Tile temp
         Tile tempTile = targetPiece.CurrentTile;
-        Transform tempParent = targetPiece.transform.parent;
 
         //Changing the target piece Logically
         _tiles[targetPiecePos.x, targetPiecePos.y].PieceReference = _tiles[currentPiecePos.x, currentPiecePos.y].PieceReference;
@@ -188,46 +197,73 @@ public class BoardManager : MonoBehaviour
         //Changing the target tile logically
         targetPiece.CurrentTile = currentPiece.CurrentTile;
 
-        targetPiece.transform.parent = currentPiece.transform.parent;
-        targetPiece.transform.localPosition = Vector3.zero;
-
         //Changing the current piece logically
         _tiles[currentPiecePos.x, currentPiecePos.y].PieceReference = tempPiece;
 
         //changing the current piece tile
         currentPiece.CurrentTile = tempTile;
-        currentPiece.transform.parent = tempParent;
-        currentPiece.transform.localPosition = Vector3.zero;
+    }
 
+    private void SwapPiecesVisually(Piece currentPiece, Piece targetPiece, bool isReversing)
+    {
+        if (currentPiece == null || targetPiece == null) return;
 
-        swapMatches.Add(currentPiece);
+        //W = World
+        Vector2 startCurrentPieceWPos = currentPiece.transform.position;
 
-        swapMatches = CheckNeighboursInLine(currentPiece, Directions.Left, Directions.Right);
+        Vector2 startTargetWPiece = targetPiece.transform.position;
 
-        //Only do this once, when the player swap the pieces
-        if (!isReversing)
+        List<Piece> swapMatches = new List<Piece>();
+
+        Transform tempParent = targetPiece.transform.parent;
+
+        Sequence moveSequence = DOTween.Sequence();
+
+        moveSequence.Append(currentPiece.transform.DOMove(startTargetWPiece, _swapDuration));
+        moveSequence.Join(targetPiece.transform.DOMove(startCurrentPieceWPos, _swapDuration));
+
+        moveSequence.OnComplete(() => 
         {
-            foreach (Piece match in CheckNeighboursInLine(currentPiece, Directions.Up, Directions.Down))
-            {
-                swapMatches.Add(match);
-            }
+            targetPiece.transform.parent = currentPiece.transform.parent;
+            targetPiece.transform.localPosition = Vector3.zero;
+
+            //changing the current piece tile
+            currentPiece.transform.parent = tempParent;
+            currentPiece.transform.localPosition = Vector3.zero;
 
 
-            if (swapMatches.Count > 1)
+            //Only do this once, when the player swap the pieces
+            if (isReversing == false)
             {
-                //TODO Destroy the pieces in the match(center included)
-                Debug.Log("We have a match");
+                swapMatches.Add(currentPiece);
+
+                swapMatches.AddRange(CheckNeighboursInLine(currentPiece, Directions.Left, Directions.Right));
+
+                swapMatches.AddRange(CheckNeighboursInLine(currentPiece, Directions.Up, Directions.Down));
+                
+
+                if (swapMatches.Count >= 3)
+                {
+                    //TODO Destroy the pieces in the match(center included)
+                    Debug.Log("We have a match");
+                    MatchDestroySequence(swapMatches);
+                }
+                else
+                {
+                    //TODO get back to your place sneaky piece
+                    SwapPieces(targetPiece, currentPiece, isReversing: true);
+                    Debug.Log("We don't have a match");
+                }
             }
             else
             {
-                //TODO get back to your place sneaky piece
-                Debug.Log("We don't have a match");
-                SwapPieces(targetPiece, currentPiece, isReversing: true);
+                _isSwapping = false;
             }
-        }
-        
+        });
     }
 
+
+    //Checks all the matches in-line, vertically and horizontally, exclude the center piece. While a match is found, the loop keeps going, until it gets in the border of board or when it doesn't find any matches.
     private List<Piece> CheckNeighboursInLine(Piece centerPiece, Directions directionA, Directions directionB)
     {
         List<Piece> matches = new List<Piece>();
@@ -248,6 +284,7 @@ public class BoardManager : MonoBehaviour
             matches.Add(centerPiece);
         }
 
+        //Debug Purposes
         foreach (Piece match in matches)
         {
             Debug.Log(match.CurrentTile);
@@ -269,5 +306,32 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
+    private void MatchDestroySequence(List<Piece> matches)
+    {
+        Sequence destructionSequence = DOTween.Sequence();
+        Vector3 scaleUpOffset = new Vector3(0.2f, 0.2f);
 
+        foreach (Piece piece in matches)
+        {
+            Sequence pieceSeq = DOTween.Sequence();
+
+            pieceSeq.Append(piece.transform.DOScale(transform.localScale + scaleUpOffset, _shrinkDuration));
+
+            pieceSeq.Append(piece.transform.DOScale(Vector3.zero, _shrinkDuration));
+
+            destructionSequence.Join(pieceSeq);
+        }
+
+        destructionSequence.OnComplete(() =>
+        { foreach (Piece piece in matches)
+            {
+                piece.gameObject.SetActive(false);
+                _isSwapping = false;
+            }
+        }
+        );
+    }
+
+    public bool GetIsSwapping() => _isSwapping;
+    public void SetIsSwapping() => _isSwapping = true;
 }
