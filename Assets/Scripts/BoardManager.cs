@@ -19,9 +19,12 @@ public class BoardManager : MonoBehaviour
     [SerializeField] Piece basePiece;
 
     private Tile[,] _tiles;
+
     private bool _isSwapping = false;
     private float _swapDuration = 0.2f;
     private float _shrinkDuration = 0.2f;
+
+    [SerializeField] bool checkEmptyFlag = false;
 
     private void Start()
     {
@@ -29,6 +32,16 @@ public class BoardManager : MonoBehaviour
         DOTween.Init();
         CreateGameBoard();
         CreateAllPieces();
+    }
+
+    private void Update()
+    {
+        if (checkEmptyFlag)
+        {
+            CascadeManagerV2();
+            checkEmptyFlag = false;
+        }
+
     }
 
     private void CreateGameBoard()
@@ -85,7 +98,8 @@ public class BoardManager : MonoBehaviour
     //Avoids free matches in the spawn phase.
     private void SpawnCheckGuard(Piece currentPiece)
     {
-
+        //WARNING : There's a small change of the pieces already form in thet beginning, proabably, because I'm only checking left and down and not all direction, I'll fix this later, since isn't so hard and won't break anything at all
+        //At the moment, for ten board rolls, 2 or 1 might appear with a 3 match
         Piece neighbourLeftPiece = CheckNeighbourPiece(currentPiece, Directions.Left);
 
         Piece neighbourBottomPiece = CheckNeighbourPiece(currentPiece, Directions.Down);
@@ -213,7 +227,8 @@ public class BoardManager : MonoBehaviour
 
         Vector2 startTargetWPiece = targetPiece.transform.position;
 
-        List<Piece> swapMatches = new List<Piece>();
+        List<Piece> horizontalMatches = new List<Piece>();
+        List<Piece> verticalMatches = new List<Piece>();
 
         Transform tempParent = targetPiece.transform.parent;
 
@@ -235,24 +250,29 @@ public class BoardManager : MonoBehaviour
             //Only do this once, when the player swap the pieces
             if (isReversing == false)
             {
-                swapMatches.Add(currentPiece);
+                horizontalMatches.Add(currentPiece);
 
-                swapMatches.AddRange(CheckNeighboursInLine(currentPiece, Directions.Left, Directions.Right));
+                verticalMatches.Add(currentPiece);
 
-                swapMatches.AddRange(CheckNeighboursInLine(currentPiece, Directions.Up, Directions.Down));
+                horizontalMatches.AddRange(CheckNeighboursInLine(currentPiece, Directions.Left, Directions.Right));
+
+                verticalMatches.AddRange(CheckNeighboursInLine(currentPiece, Directions.Up, Directions.Down));
                 
 
-                if (swapMatches.Count >= 3)
+                if (horizontalMatches.Count >= 3)
                 {
-                    //TODO Destroy the pieces in the match(center included)
-                    Debug.Log("We have a match");
-                    MatchDestroySequence(swapMatches);
+                    Debug.Log("We have a horizontal match");
+                    MatchDestroySequence(horizontalMatches);
+                }
+                else if(verticalMatches.Count >= 3)
+                {
+                    Debug.Log("We have a vertical match");
+                    MatchDestroySequence(verticalMatches);
                 }
                 else
                 {
-                    //TODO get back to your place sneaky piece
-                    SwapPieces(targetPiece, currentPiece, isReversing: true);
-                    Debug.Log("We don't have a match");
+                    Debug.Log("We didn't find any matches");
+                    SwapPieces(targetPiece, currentPiece, isReversing:true);
                 }
             }
             else
@@ -297,13 +317,100 @@ public class BoardManager : MonoBehaviour
     /// </summary>
     /// <param name="piece"></param>
     /// <returns></returns>
-    private bool CheckIfTileExists(Vector2 tilePos)
+    private bool CheckIfTileExists(Vector2Int tilePos)
     {
         if (tilePos.x < 0 || tilePos.y < 0) { return false; }
 
         if (tilePos.x >= boardWidth || tilePos.y >= boardHeight) { return false; }
 
         return true;
+    }
+
+    private void CascadeManagerV2()
+    {
+        for (int x = 0; x < boardWidth; x++)
+        {
+            for (int y = 0; y < boardHeight; y++)
+            {
+                if(_tiles[x,y].TileState == TileState.Empty)
+                {
+                    int searchY = y + 1;
+
+                    while(searchY < boardHeight && _tiles[x, searchY].TileState == TileState.Empty)
+                    {
+                        searchY++;
+                    }
+
+                    if (searchY < boardHeight && _tiles[x, searchY].TileState == TileState.HoldingAPiece)
+                    {
+                        CascadeEffectVisually(MovePieceDownLogically(_tiles[x, searchY]));
+                    }
+
+                    else if(searchY >= boardHeight)
+                    {
+                        Debug.Log($"A refill is needed in the column {x}");
+                    }
+                }
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Moves the Piece Down logically, and returns the moved piece, so it's easy to animate 
+    /// </summary>
+    /// <param name="currentPieceTile"></param>
+    private Piece MovePieceDownLogically(Tile currentPieceTile)
+    {
+
+        int searchY = currentPieceTile.TilePosition.y - 1;
+
+        
+
+        while (searchY >= 0 && _tiles[currentPieceTile.TilePosition.x, searchY].TileState == TileState.Empty)
+        {
+            searchY--;
+        }
+
+        int targetY = Mathf.Max(searchY + 1, 0);
+        Tile downwardTile = _tiles[currentPieceTile.TilePosition.x, targetY];
+
+        //if(searchY > 0 && _tiles[currentPieceTile.TilePosition.x, searchY].TileState == TileState.HoldingAPiece)
+        //{
+        //    downwardTile = CheckIfTileExists(new Vector2Int(currentPieceTile.TilePosition.x, searchY + 1)) ? _tiles[currentPieceTile.TilePosition.x, searchY + 1] : null;
+        //}
+
+
+        if (downwardTile != null && downwardTile.TileState == TileState.Empty)
+        {
+            Piece pieceToMove = currentPieceTile.PieceReference;
+
+            pieceToMove.CurrentTile = downwardTile;
+
+            downwardTile.PieceReference = pieceToMove;
+            downwardTile.TileState = TileState.HoldingAPiece;
+
+            currentPieceTile.PieceReference = null;
+            currentPieceTile.TileState = TileState.Empty;
+
+            return downwardTile.PieceReference;
+        }
+        return null;
+    }
+
+    private void CascadeEffectVisually(Piece pieceToAnimate)
+    {
+        Vector2 targetPos = pieceToAnimate.CurrentTile.transform.position;
+
+        Sequence moveSequence = DOTween.Sequence();
+
+        moveSequence.Join(pieceToAnimate.transform.DOMove(targetPos, .2f));
+
+        moveSequence.OnComplete(() => 
+        {
+            pieceToAnimate.transform.parent = pieceToAnimate.CurrentTile.transform;
+            pieceToAnimate.transform.localPosition = Vector3.zero;
+        });
     }
 
     private void MatchDestroySequence(List<Piece> matches)
@@ -321,11 +428,19 @@ public class BoardManager : MonoBehaviour
 
             destructionSequence.Join(pieceSeq);
         }
-
+       
         destructionSequence.OnComplete(() =>
         { foreach (Piece piece in matches)
             {
+                
+                piece.CurrentTile.PieceReference = null;
+
+                piece.CurrentTile.TileState = TileState.Empty;
+
+                piece.CurrentTile = null;
+
                 piece.gameObject.SetActive(false);
+
                 _isSwapping = false;
             }
         }

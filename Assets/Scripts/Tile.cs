@@ -27,7 +27,6 @@ public class Tile : MonoBehaviour
     {
         string tileCoords = $"x: {TilePosition.x}, y: {TilePosition.y}";
         gameObject.name = tileCoords;
-
         //Debug.Log($"{tileCoords} holds the piece: {PieceReference.gameObject.name} and its status is : {TileState}");
     }
 

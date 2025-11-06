@@ -45,6 +45,8 @@ public class Piece : MonoBehaviour
 
         SetPieceName(pType);
         SetPieceSprite(pType);
+        //We also need to implement this line here, to it works corretly when we do the refilling board process
+        this.CurrentTile.TileState = TileState.HoldingAPiece;
     }
 
     //Just so it's easier to indentify them in the hierachy
