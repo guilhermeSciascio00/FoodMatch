@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Piece
   pieceSprite: {fileID: 0}
+  printCurrentTile: 0
   _spriteRenderer: {fileID: 681444891030659988}
   _pieceCollectionSO:
   - {fileID: 11400000, guid: 2d3a7bf0f6cca074bab6b930a0b7537c, type: 2}
@@ -126,7 +127,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5143747267312109425}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

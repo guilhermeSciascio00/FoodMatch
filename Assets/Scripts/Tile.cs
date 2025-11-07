@@ -20,6 +20,7 @@ public class Tile : MonoBehaviour
 
     [Header("Debug only")]
     [SerializeField] bool printCurrentPiece;
+    [SerializeField] bool printCurrentState;
 
 
 
@@ -36,6 +37,11 @@ public class Tile : MonoBehaviour
         {
             Debug.Log(PieceReference);
             printCurrentPiece = false;
+        } 
+        if (printCurrentState)
+        {
+            Debug.Log(TileState);
+            printCurrentState = false;
         }
     }
 

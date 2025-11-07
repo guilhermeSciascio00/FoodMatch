@@ -37,7 +37,7 @@ public class Piece : MonoBehaviour
     }
 
     //I think that's important to let it be public, before we need to verify in the BoardManager, if we didn't spawn three similar pieces in the neighbors tiles.. If we did, we need to set the piece again.
-    public void SetPiece()
+    public void SetPiece(bool isPooling = false)
     {
         //Set a random type to the piece
         PieceType randomType = (PieceType)Random.Range(1, 4);
@@ -46,6 +46,7 @@ public class Piece : MonoBehaviour
         SetPieceName(pType);
         SetPieceSprite(pType);
         //We also need to implement this line here, to it works corretly when we do the refilling board process
+        if (isPooling) return;
         this.CurrentTile.TileState = TileState.HoldingAPiece;
     }
 

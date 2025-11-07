@@ -22,7 +22,7 @@ public class PlayerBoardInteraction : MonoBehaviour
 
     private void Update()
     {
-        if (!_boardManager.GetIsSwapping())
+        if (_boardManager.GetBoardCurrentState() == BoardState.Idle)
         {
             TouchInteraction();
             DragInteraction();
@@ -109,7 +109,6 @@ public class PlayerBoardInteraction : MonoBehaviour
 
         if(_currentHoldingPiece != null && _targetSwapPiece != null) 
         {
-            _boardManager.SetIsSwapping();
             _boardManager.SwapPieces(_currentHoldingPiece, _targetSwapPiece, isReversing: false);
             _currentHoldingPiece = null;
             _targetSwapPiece = null;
