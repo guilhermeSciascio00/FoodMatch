@@ -38,17 +38,21 @@ public class BoardManager : MonoBehaviour
     [SerializeField] BoardState _boardLastState;
 
     //Animations variables
-    private int _prePiecesPool = 32;
+    private int _prePiecesPool = 16;
     private float _spawnAboveOffset = 1.5f;
     private float _swapDuration = 0.2f;
     private float _fallDuration = 0.25f;
     private float _shrinkDuration = 0.2f;
+    private Vector3 _defaultLocalScale;
 
     //Tiles list and pieces pool
     private Tile[,] _tiles;
     private List<Tile> _emptyTopRowTiles;
     private Queue<Piece> _piecesPool;
 
+    //Safe guard variable, so the coroutine isn't called multiple times inside the DestroyMatchFunction
+
+    private bool _isStablizing = false;
 
     private void Start()
     {
@@ -102,6 +106,8 @@ public class BoardManager : MonoBehaviour
         //Here we update the tile state and its piece reference
         _tiles[piecePosition.x, piecePosition.y].PieceReference = _piece;
         _tiles[piecePosition.x, piecePosition.y].TileState = TileState.HoldingAPiece;
+
+        _defaultLocalScale = _piece.transform.localScale;
 
         return _piece;
     }
@@ -545,11 +551,16 @@ public class BoardManager : MonoBehaviour
 
                 piece.SetPiece(isPooling: true);
                 piece.gameObject.SetActive(false);
+                DOTween.Kill(piece);
                 _piecesPool.Enqueue(piece);
             }
             destructionSequence.Kill();
-            //Start the board stabilization after the destruction process has ended.
-            StartCoroutine(StabilizerBoard());
+            if(!_isStablizing) 
+            {
+                //Start the board stabilization after the destruction process has ended.
+                StartCoroutine(StabilizerBoard());
+            }
+
         });
     }
 
@@ -594,6 +605,7 @@ public class BoardManager : MonoBehaviour
 
             piece.transform.parent = tilesParent.transform;
             piece.transform.position = spawnWordPos;
+            piece.transform.localScale = _defaultLocalScale;
 
             //Tween down to the tile's world position
 
@@ -622,9 +634,10 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator StabilizerBoard()
     {
-        if (_boardCurrentState == BoardState.Falling || _boardCurrentState == BoardState.Refilling) yield break;
+        if (_boardCurrentState == BoardState.Falling || _boardCurrentState == BoardState.Refilling || _isStablizing) yield break;
 
         bool boardStable = false;
+        _isStablizing = true;
 
         while(!boardStable)
         {
@@ -658,8 +671,8 @@ public class BoardManager : MonoBehaviour
             if (matches.Count > 0)
             {
                 MatchDestroySequence(matches);
-
                 yield return new WaitUntil(() => !DOTween.IsTweening(tilesParent));
+                yield return new WaitForSeconds(0.5f);
             }
             else
             {
@@ -670,6 +683,7 @@ public class BoardManager : MonoBehaviour
         _boardLastState = _boardCurrentState;
         _boardCurrentState = BoardState.Idle;
         _emptyTopRowTiles.Clear();
+        _isStablizing = false;
     }
 
     private List<Piece> CheckEntireBoardForMatches()
